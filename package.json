@@ -1,0 +1,22 @@
+{
+  "name": "neuro-api-platform",
+  "version": "1.0.0",
+  "description": "Interactive Nervous System API Visualization Platform",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  },
+  "keywords": [
+    "api",
+    "nervous-system",
+    "visualization",
+    "sandbox",
+    "express",
+    "interactive"
+  ],
+  "author": "DecodeLabs Intern",
+  "license": "MIT"
+}

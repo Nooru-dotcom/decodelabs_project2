@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NeuroAPI - Interactive Backend Synaptic Visualizer</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <div class="header-container">
+      <div class="logo">
+        <span class="pulse-ring"></span>
+        <div class="logo-text">NEURO<span>API</span></div>
+      </div>
+      <div class="server-badge">
+        <span class="status-indicator online"></span>
+        <span class="status-text">Brain Stem Online: 3000</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Dashboard Layout -->
+  <main class="dashboard-grid">
+    
+    <!-- LEFT PANEL: Autonomic Defense & Controls -->
+    <section class="card panel-controls">
+      <h2>Autonomic Defense Control</h2>
+      <p class="section-desc">Toggle backend configurations to simulate edge cases, security blocks, rate limiting, and system resilience.</p>
+      
+      <div class="control-groups">
+        <!-- Database Health / Circuit Breaker -->
+        <div class="control-card">
+          <div class="control-header">
+            <h3>Database Health</h3>
+            <span class="status-dot green" id="db-health-badge">HEALTHY</span>
+          </div>
+          <p class="setting-desc">Simulate a database crash to see the self-healing Circuit Breaker block requests with 500 errors.</p>
+          <div class="toggle-btn-wrapper">
+            <button id="btn-toggle-db" class="btn btn-success">Database Online</button>
+          </div>
+        </div>
+
+        <!-- Authentication (AuthN / AuthZ) -->
+        <div class="control-card">
+          <div class="control-header">
+            <h3>Authentication (AuthN/AuthZ)</h3>
+            <label class="switch">
+              <input type="checkbox" id="toggle-auth">
+              <span class="slider round"></span>
+            </label>
+          </div>
+          <p class="setting-desc">Enforce bearer tokens. Toggling requires authorization headers to access protected resources.</p>
+          <div class="auth-credential-selectors" id="auth-selectors" style="display:none;">
+            <label for="auth-token-select">Client Identity Header Token:</label>
+            <select id="auth-token-select" class="form-select">
+              <option value="none">No Header (Anonymous)</option>
+              <option value="invalid">Invalid Token (invalid-token-neuro)</option>
+              <option value="user">User Token (token-user-neuro)</option>
+              <option value="admin">Admin Token (token-admin-neuro)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Latency & Throughput -->
+        <div class="control-card">
+          <div class="control-header">
+            <h3>Synaptic Latency</h3>
+            <span class="value-display"><span id="latency-val">50</span>ms</span>
+          </div>
+          <p class="setting-desc">Simulate slow neural pathways. Adds delay to requests to measure user impact.</p>
+          <input type="range" id="latency-range" min="0" max="2000" step="50" value="50" class="range-slider">
+        </div>
+
+        <!-- Rate Limiter -->
+        <div class="control-card">
+          <div class="control-header">
+            <h3>Rate Limit Threshold</h3>
+            <span class="value-display"><span id="rate-val">10</span> req / 10s</span>
+          </div>
+          <p class="setting-desc">Throttle speed. Simulates a flood of messages triggering 429 Too Many Requests.</p>
+          <input type="range" id="rate-range" min="1" max="25" step="1" value="10" class="range-slider">
+        </div>
+      </div>
+    </section>
+
+    <!-- CENTER PANEL: Synaptic Gap Visualizer & Playback Canvas -->
+    <section class="card panel-visualizer">
+      <div class="visualizer-header">
+        <h2>Synaptic Gap Visualization</h2>
+        <div class="circuit-breaker-display">
+          Breaker State: <span id="cb-state-label" class="cb-closed">CLOSED</span>
+        </div>
+      </div>
+      <p class="section-desc">Observe electrical signal pulses carrying request & response payloads between the Client (Cortex) and Server (Brain Stem).</p>
+      
+      <div class="canvas-container">
+        <canvas id="synapse-canvas"></canvas>
+        <div class="canvas-labels">
+          <span class="lbl-client">CLIENT CORTEX</span>
+          <span class="lbl-gap">THE SYNAPTIC VOID (NETWORK)</span>
+          <span class="lbl-server">SERVER BRAIN STEM</span>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="quick-simulation-actions">
+        <h4>Demo Action Scenarios:</h4>
+        <div class="btn-group">
+          <button class="btn btn-outline" id="demo-get-200">GET Neurons (200 OK)</button>
+          <button class="btn btn-outline" id="demo-post-201">POST Valid Neuron (201 Created)</button>
+          <button class="btn btn-outline" id="demo-post-400">POST Duplicate (400 Bad Request)</button>
+          <button class="btn btn-outline" id="demo-flood">Trigger Rate Limit (429 Flood)</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT PANEL: API Sandbox & Playground -->
+    <section class="card panel-sandbox">
+      <h2>Interactive Sandbox</h2>
+      <p class="section-desc">Compose custom HTTP requests, configure payloads, and inspect the response code and content.</p>
+
+      <div class="sandbox-controls">
+        <div class="request-line">
+          <select id="request-method" class="method-select">
+            <option value="GET">GET</option>
+            <option value="POST">POST</option>
+            <option value="PUT">PUT</option>
+            <option value="DELETE">DELETE</option>
+          </select>
+          <input type="text" id="request-url" value="/api/neurons" class="url-input">
+          <button id="btn-send-request" class="btn btn-primary">Fire Signal</button>
+        </div>
+
+        <div class="sandbox-body-wrapper" id="body-container" style="display:none;">
+          <label for="request-body">Request Body (JSON):</label>
+          <textarea id="request-body" class="json-textarea" rows="8">{
+  "name": "Neuron-Delta",
+  "type": "Sensory",
+  "charge": 80,
+  "status": "Active",
+  "x": 250,
+  "y": 120
+}</textarea>
+        </div>
+      </div>
+
+      <div class="sandbox-response">
+        <div class="response-header">
+          <h4>Response Output</h4>
+          <span id="response-status" class="status-code-pill status-none">None</span>
+        </div>
+        <div class="code-output-container">
+          <pre><code id="response-body-out" class="language-json">{ "message": "Fire a request to inspect output..." }</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- BOTTOM ROW: Performance Monitor, Gatekeeper, and Live Guide -->
+    <section class="card panel-monitor">
+      <h2>Live Telemetry Dashboard</h2>
+      <div class="stats-row">
+        <div class="stat-box">
+          <div class="stat-title">Total API Signals</div>
+          <div class="stat-value" id="stat-total">0</div>
+        </div>
+        <div class="stat-box success">
+          <div class="stat-title">Successful (2xx)</div>
+          <div class="stat-value" id="stat-success">0</div>
+        </div>
+        <div class="stat-box warning">
+          <div class="stat-title">Client Blocks (4xx)</div>
+          <div class="stat-value" id="stat-client-err">0</div>
+        </div>
+        <div class="stat-box danger">
+          <div class="stat-title">Server Crashes (5xx)</div>
+          <div class="stat-value" id="stat-server-err">0</div>
+        </div>
+      </div>
+
+      <div class="gatekeeper-log-section">
+        <h3>The Gatekeeper Report</h3>
+        <div class="validation-stepper">
+          <div class="step" id="step-syntactic">
+            <span class="step-icon">○</span>
+            <div class="step-details">
+              <strong>Syntactic Validation</strong>
+              <span class="step-desc">Parsing format, keys, and values types check</span>
+            </div>
+          </div>
+          <div class="step" id="step-semantic">
+            <span class="step-icon">○</span>
+            <div class="step-details">
+              <strong>Semantic Validation</strong>
+              <span class="step-desc">Business rule checks (Duplicate checks & overlap rules)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card panel-console">
+      <h2>Synaptic Activity Terminal</h2>
+      <div class="console-actions">
+        <button id="btn-clear-console" class="btn-clear">Clear Logs</button>
+      </div>
+      <div class="console-logs" id="console-output">
+        <div class="log-line system">[SYSTEM] NeuroAPI Diagnostic shell initialized... Ready to parse.</div>
+      </div>
+    </section>
+
+    <section class="card panel-guide">
+      <h2>Interactive Intern Study Guide</h2>
+      <div class="guide-tabs">
+        <button class="guide-tab active" data-tab="tab-ipo">1. IPO Model</button>
+        <button class="guide-tab" data-tab="tab-rest">2. REST Naming</button>
+        <button class="guide-tab" data-tab="tab-status">3. Status Codes</button>
+        <button class="guide-tab" data-tab="tab-defense">4. Defenses</button>
+      </div>
+      
+      <div class="guide-content-wrapper">
+        <div class="guide-tab-content active" id="tab-ipo">
+          <h4>The Input-Process-Output Cycle (Slide 9)</h4>
+          <p>An API operates as a nervous pathway. The server takes input (Sensory stimulation/JSON body), processes it through rules (Gatekeeper validation), and responds with an Output signal (Actuation/Status code).</p>
+          <div class="guide-insight">
+            <strong>Key Metaphor:</strong> The eye captures the image (Input), the brain cortex runs logic (Process), and the muscle reacts (Output). Try sending a <strong>POST</strong> to trigger validation checks!
+          </div>
+        </div>
+
+        <div class="guide-tab-content" id="tab-rest">
+          <h4>RESTful Naming Conventions (Slide 12)</h4>
+          <p>Proper APIs name resources as nouns (entities) and use standard HTTP methods as verbs. Methods must be consistent:</p>
+          <ul>
+            <li><strong>GET /api/neurons</strong> - Retrieves lists (Safe, idempotent)</li>
+            <li><strong>POST /api/neurons</strong> - Creates a neuron (Unsafe, non-idempotent)</li>
+            <li><strong>PUT /api/neurons/:id</strong> - Replaces/Updates a neuron (Idempotent update)</li>
+            <li><strong>DELETE /api/neurons/:id</strong> - Removes a neuron (Idempotent removal)</li>
+          </ul>
+        </div>
+
+        <div class="guide-tab-content" id="tab-status">
+          <h4>Communicating State (Slide 13 & 14)</h4>
+          <p>Never leave the client guessing. Use proper HTTP response codes:</p>
+          <div class="status-legend-grid">
+            <span class="badge-201">201 Created</span> <span>Successfully registered new entity.</span>
+            <span class="badge-204">204 No Content</span> <span>Deleted resource successfully. No body.</span>
+            <span class="badge-400">400 Bad Request</span> <span>Syntactic/Semantic rule validation failure.</span>
+            <span class="badge-429">429 Too Many Requests</span> <span>Rate limits exceeded. Rate controller intervention.</span>
+            <span class="badge-500">500 Internal Error</span> <span>Internal failure. Database crash simulated.</span>
+          </div>
+        </div>
+
+        <div class="guide-tab-content" id="tab-defense">
+          <h4>Autonomic Defenses (Slide 15)</h4>
+          <p>Shield your application's logic with core safety checks:</p>
+          <ul>
+            <li><strong>AuthN (Authentication)</strong>: Verifies identity (token validation)</li>
+            <li><strong>AuthZ (Authorization)</strong>: Verifies operational privileges (role-based)</li>
+            <li><strong>Circuit Breaker</strong>: Isolates server failures automatically so system remains stable. Toggling database offline simulates this behavior.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <div class="footer-container">
+      <p>&copy; 2026 DecodeLabs Industrial Training. Project 2 Milestone submission.</p>
+    </div>
+  </footer>
+
+  <script src="js/neuro-canvas.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
